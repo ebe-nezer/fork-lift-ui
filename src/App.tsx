@@ -1,7 +1,7 @@
 /**
  * App component: Main UI for the forklift controller.
  * - Handles API IP validation and connection.
- * - Renders Throttle, Gas, and SteeringWheel controls.
+ * - Renders Throttle, ForkLiftDirection, and SteeringWheel controls.
  * - Sends control values to the backend API.
  * - Responsive to screen orientation.
  */
@@ -9,6 +9,7 @@
 import {
   Dialog,
   IconButton,
+  MenuItem,
   styled,
   TextField,
   Typography,
@@ -17,8 +18,10 @@ import SteeringWheel from "./components/steering-wheel";
 import { useState } from "react";
 import { useScreenOrientation } from "./hook/checkScreen";
 import Throttle from "./components/throttle";
-import Gas from "./components/gas";
+import ForkLiftDirection from "./components/forkLift";
 import RightIcon from "./assets/right-arrow-svgrepo-com.svg";
+import Speedometer from "./components/speedometer";
+import axios from "axios";
 function isValidApiIpOrHost(host: string): boolean {
   // IPv4 regex
   const ipv4 =
@@ -50,29 +53,36 @@ function App() {
 
   const checkScreenOrientation = useScreenOrientation();
 
-  const [, setThrottle] = useState(0);
+  const [throttle, setThrottle] = useState(0);
   const handleThrottleChange = (th: number) => {
-    fetch(`${API_IP}/setThrottle1?value=${th}`);
+    axios.get(`${API_IP}/setThrottle1?value=${th}`);
+    console.log("Current throttle:", th);
     setThrottle(th);
   };
 
-  const [, setSteeringAngle] = useState(0);
+  const [steering, setSteeringAngle] = useState(90);
 
   const handleSteeringChange = (angle: number) => {
     console.log("Current steering angle:", angle);
-    fetch(`${API_IP}/setSteering?value=${angle}`);
+    axios.get(`${API_IP}/setSteering?value=${angle}`);
     setSteeringAngle(angle);
   };
 
-  const [gasPedal, setGasPedal] = useState(0);
+  const [forkLiftDirectionPedal, setForkLiftDirectionPedal] = useState(33);
 
-  const handleGasPedalChange = (active: number) => {
-    console.log("Current gas pedal:", active);
-    fetch(`${API_IP}/setThrottle2?value=${active}`);
-    setGasPedal(active);
+  const handleForkLiftDirectionPedalChange = (active: number) => {
+    console.log("Current ForkLiftDirection pedal:", active);
+    axios.get(`${API_IP}/setThrottle2?value=${active}`);
+    setForkLiftDirectionPedal(active);
   };
 
-  const isIpValid = checkIp(API_IP);
+  const isIpValid = "asdf";
+
+  const values = [
+    { label: "Throttle", value: throttle },
+    { label: "Direction", value: forkLiftDirectionPedal },
+    { label: "Steering", value: `${steering.toFixed(0)} deg` },
+  ];
 
   return checkScreenOrientation === "landscape" ? (
     !isIpValid ? (
@@ -139,13 +149,43 @@ function App() {
       </Dialog>
     ) : (
       <Container>
-        <div>Logs will be available here</div>
+        <div
+          style={{
+            padding: "12px",
+          }}
+        ></div>
         <Control>
           <ControlContainer>
-            <Throttle onChange={handleThrottleChange} />
-            <Gas onChange={handleGasPedalChange} value={gasPedal} />
+            <Throttle
+              onChange={handleThrottleChange}
+              value={throttle}
+              min={0}
+              max={50}
+            />
+            <ForkLiftDirection
+              onChange={handleForkLiftDirectionPedalChange}
+              value={forkLiftDirectionPedal}
+            />
           </ControlContainer>
-          <SteeringWheel onChange={handleSteeringChange} min={-60} max={60} />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "flex-end",
+            }}
+          >
+            {values.map((item) => (
+              <MenuItem key={item.label} sx={{ maxWidth: "100px" }}>
+                <Typography variant="caption">
+                  <strong>{item.label}: </strong>
+                  {item.value}
+                </Typography>
+              </MenuItem>
+            ))}
+            <Speedometer value={throttle} />
+          </div>
+          <SteeringWheel onChange={handleSteeringChange} />
         </Control>
       </Container>
     )
@@ -164,16 +204,23 @@ export default App;
 const Container = styled("div")({
   width: "100%",
   height: "100dvh",
+  maxWidth: "100%",
+  maxHeight: "100%",
   display: "grid",
   gridTemplateColumns: "1fr",
-  gridTemplateRows: "1fr auto",
+  gridTemplateRows: "1fr auto auto",
 });
 
 const Control = styled("div")({
   display: "grid",
-  gridTemplateColumns: "1fr auto",
+  gridTemplateColumns: "1fr 1fr auto",
   gridTemplateRows: "1fr auto",
   padding: "32px",
+  alignItems: "end",
+  "& .speedometer": {
+    maxWith: "240px",
+    maxHeight: "240px",
+  },
 });
 
 const ControlContainer = styled("div")({

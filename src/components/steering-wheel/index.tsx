@@ -13,8 +13,16 @@ type Props = {
   onChange(angle: number): void;
   min?: number;
   max?: number;
+  left?: number;
+  right?: number;
 };
-const SteeringWheel = ({ onChange, min = -60, max = 60 }: Props) => {
+const SteeringWheel = ({
+  onChange,
+  min = -75,
+  max = 75,
+  left = 60,
+  right = 120,
+}: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [angle, setAngle] = useState(0); // -min to +max
   const [dragging, setDragging] = useState(false);
@@ -104,6 +112,10 @@ const SteeringWheel = ({ onChange, min = -60, max = 60 }: Props) => {
       setAngle((prev) => {
         // Use exponential decay for smoothness
         const next = prev * 0.85;
+        // Map next to base angle
+        const mappedAngle =
+          ((next - min) / (max - min)) * (right - left) + left;
+        onChange(mappedAngle);
         if (Math.abs(next) < 0.5) {
           return 0;
         }
@@ -141,7 +153,10 @@ const SteeringWheel = ({ onChange, min = -60, max = 60 }: Props) => {
     );
     setAngle(newAngle);
     console.log("[SteeringWheel] onChange called with:", newAngle);
-    onChange(newAngle);
+    // Map newAngle from [min, max] to [left, right]
+    const mappedAngle =
+      ((newAngle - min) / (max - min)) * (right - left) + left;
+    onChange(mappedAngle);
     // Stop inertia if user is dragging
     if (inertiaRef.current) {
       console.log("PointerMove: cancel inertia");
