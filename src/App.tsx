@@ -112,8 +112,7 @@ function App() {
                   onClick={() => {
                     if (checkIp(formApi)) {
                       // Proceed with the valid IP
-                      console.log("Valid IP entered:", formApi);
-                      setAPI_IP(formApi);
+                      setAPI_IP(formApi.replace(/\/+$/, ""));
                     } else {
                       // Show an error message
                       console.error("Invalid IP entered:", formApi);
@@ -134,7 +133,7 @@ function App() {
       </Dialog>
     ) : (
       <Container>
-        <div></div>
+        <div>Logs will be available here</div>
         <Control>
           <ControlContainer>
             <Throttle onChange={handleThrottleChange} />
