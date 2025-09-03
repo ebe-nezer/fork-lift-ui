@@ -19,21 +19,27 @@ import { useScreenOrientation } from "./hook/checkScreen";
 import Throttle from "./components/throttle";
 import Gas from "./components/gas";
 import RightIcon from "./assets/right-arrow-svgrepo-com.svg";
-function isValidApiIp(ip: string): boolean {
+function isValidApiIpOrHost(host: string): boolean {
   // IPv4 regex
   const ipv4 =
     /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
   // IPv6 regex (simple version)
-  const ipv6 = /^([\\da-fA-F]{1,4}:){7}[\\da-fA-F]{1,4}$/;
-  return ipv4.test(ip) || ipv6.test(ip);
+  const ipv6 = /^([\da-fA-F]{1,4}:){7}[\da-fA-F]{1,4}$/;
+  // Hostname regex (RFC 1123)
+  const hostname =
+    /^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*\.?$/;
+  return ipv4.test(host) || ipv6.test(host) || hostname.test(host);
 }
 
-const checkIp = (ip: string) => {
+const checkIp = (input: string) => {
   try {
-    const url = new URL(ip);
-    return isValidApiIp(url.hostname);
-  } catch (error) {
-    console.error("Error fetching IP:", error);
+    // If input doesn't start with protocol, add http:// for URL parsing
+    const url = input.match(/^https?:\/\//)
+      ? new URL(input)
+      : new URL(`http://${input}`);
+    return isValidApiIpOrHost(url.hostname);
+  } catch (err) {
+    console.log(err);
     return false;
   }
 };
