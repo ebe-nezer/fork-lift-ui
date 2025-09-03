@@ -76,7 +76,7 @@ function App() {
     setForkLiftDirectionPedal(active);
   };
 
-  const isIpValid = "asdf";
+  const isIpValid = checkIp(API_IP);
 
   const values = [
     { label: "Throttle", value: throttle },
